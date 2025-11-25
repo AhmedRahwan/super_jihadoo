@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Super Jihadoo</title>
 
   <link href="assets/css/reset.css" rel="stylesheet" />
@@ -24,7 +25,7 @@
 </head>
 
 <body>
-  <div class="main">
+  <div class="main" id="main-content">
     <div class="description">
       <div>
         <h1>Super Jihadoo</h1>
@@ -56,9 +57,89 @@
     </div>
 
   </div>
+  <div id="mobile-overlay" class="mobile-overlay" aria-hidden="true">
+    <div class="mobile-overlay__content">
+      <div class="mobile-overlay__speech">
+        <p>
+          Hey! This adventure plays best on a desktop browser.
+          Grab a keyboard and meet me there!
+        </p>
+      </div>
+      <img
+        src="assets/sprites/jihadoooncoinbox.png"
+        alt="Jihadoo coin box character"
+        class="mobile-overlay__character"
+      />
+    </div>
+  </div>
 </body>
 
 <script src="assets/javascripts/jquery.min.js"></script>
+<script>
+  (function () {
+    const overlay = document.getElementById('mobile-overlay');
+    const mainContent = document.getElementById('main-content');
+    const backgroundMusic = document.getElementById('background_music');
+
+    if (!overlay || !mainContent) {
+      window.IS_MOBILE_BLOCKED = false;
+      return;
+    }
+
+    const isMobileBrowser = () => {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const touchCapable = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+      const smallViewport = window.matchMedia('(max-width: 900px)').matches;
+      return (mobileRegex.test(ua.toLowerCase()) || touchCapable) && smallViewport;
+    };
+
+    const applyState = (blocked) => {
+      window.IS_MOBILE_BLOCKED = blocked;
+      if (blocked) {
+        overlay.classList.add('mobile-overlay--visible');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('mobile-blocked');
+        mainContent.setAttribute('aria-hidden', 'true');
+        if (backgroundMusic) {
+          backgroundMusic.pause();
+        }
+      } else {
+        overlay.classList.remove('mobile-overlay--visible');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('mobile-blocked');
+        mainContent.removeAttribute('aria-hidden');
+        if (backgroundMusic && backgroundMusic.dataset.userPaused !== 'true') {
+          backgroundMusic.play().catch(() => {});
+        }
+      }
+    };
+
+    let lastState;
+    const toggleOverlay = () => {
+      const blocked = isMobileBrowser();
+      if (blocked !== lastState) {
+        if (lastState === true && blocked === false) {
+          applyState(blocked);
+          window.location.reload();
+          return;
+        }
+        if (lastState === false && blocked === true) {
+          window.location.reload();
+          return;
+        }
+        applyState(blocked);
+        lastState = blocked;
+      } else if (typeof lastState === 'undefined') {
+        applyState(blocked);
+        lastState = blocked;
+      }
+    };
+
+    toggleOverlay();
+    window.addEventListener('resize', toggleOverlay);
+  }());
+</script>
 <script src="assets/javascripts/bundle.js"></script>
 
 </html>

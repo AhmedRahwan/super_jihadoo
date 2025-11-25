@@ -115,3 +115,76 @@ canvas {
   -webkit-touch-callout: none;
   -webkit-user-drag: none;
 }
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #63adff;
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 2000;
+}
+
+.mobile-overlay--visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-overlay__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 520px;
+}
+
+.mobile-overlay__character {
+  max-width: 260px;
+  width: 60vw;
+  height: auto;
+}
+
+.mobile-overlay__speech {
+  position: relative;
+  background: #fff;
+  color: #000;
+  border-radius: 15px;
+  padding: 20px;
+  font-size: 2.2rem !important;
+  line-height: 1.4;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.mobile-overlay__speech::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 20px 15px 0;
+  border-style: solid;
+  border-color: #fff transparent transparent transparent;
+}
+
+.mobile-blocked {
+  overflow: hidden;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .mobile-overlay__speech {
+    font-size: 1rem;
+    padding: 16px;
+  }
+
+  .mobile-overlay__character {
+    max-width: 200px;
+  }
+}

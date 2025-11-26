@@ -2097,12 +2097,26 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 // todos: animate blocks. mario duck/run. enemy collisions
 
 class Game {
+  constructor() {
+    this.gameLoopRunning = false;
+    this.audioStarted = false;
+    this.lastFrameTime = 0;
+    this.targetFPS = 60;
+    this.frameInterval = 1000 / this.targetFPS;
+  }
+
   init() {
     const canvasEl = document.getElementById('game-canvas');
     const ctx = canvasEl.getContext('2d');
 
     if (window && window.IS_MOBILE_BLOCKED) {
       console.warn('Mobile browser detected. Game loop halted.');
+      return;
+    }
+
+    // Prevent multiple game loops
+    if (this.gameLoopRunning) {
+      console.warn('Game loop already running. Skipping initialization.');
       return;
     }
 
@@ -2122,6 +2136,22 @@ class Game {
 
     const backgroundMusic = document.getElementById('background_music');
 
+    // Start audio after user interaction
+    const startAudio = () => {
+      if (!this.audioStarted && backgroundMusic) {
+        backgroundMusic.play().catch((err) => {
+          console.warn('Audio autoplay prevented:', err);
+        });
+        this.audioStarted = true;
+      }
+    };
+
+    // Try to start audio on any user interaction
+    const userInteractionEvents = ['click', 'keydown', 'touchstart'];
+    userInteractionEvents.forEach((eventType) => {
+      document.addEventListener(eventType, startAudio, { once: true });
+    });
+
     // Add mute button
     this.muted = false;
 
@@ -2135,6 +2165,7 @@ class Game {
         e.target.className += 'muted';
       }
       e.preventDefault();
+      startAudio(); // Also start audio on mute button click
     }, false);
 
     const spriteSheet = new Image();
@@ -2193,20 +2224,31 @@ class Game {
   }
 
   run(data) {
-    const loop = () => {
-      __WEBPACK_IMPORTED_MODULE_1__util_input__["a" /* default */].update(data);
-      __WEBPACK_IMPORTED_MODULE_2__util_animation__["a" /* default */].update(data);
-      __WEBPACK_IMPORTED_MODULE_3__util_movement__["a" /* default */].update(data);
-      __WEBPACK_IMPORTED_MODULE_4__util_physics__["a" /* default */].update(data);
+    this.gameLoopRunning = true;
+    
+    const loop = (currentTime) => {
+      // Frame rate limiting - cap at 60fps
+      const elapsed = currentTime - this.lastFrameTime;
+      
+      if (elapsed >= this.frameInterval) {
+        this.lastFrameTime = currentTime - (elapsed % this.frameInterval);
+        
+        __WEBPACK_IMPORTED_MODULE_1__util_input__["a" /* default */].update(data);
+        __WEBPACK_IMPORTED_MODULE_2__util_animation__["a" /* default */].update(data);
+        __WEBPACK_IMPORTED_MODULE_3__util_movement__["a" /* default */].update(data);
+        __WEBPACK_IMPORTED_MODULE_4__util_physics__["a" /* default */].update(data);
 
-      Game.updateView(data);
-      __WEBPACK_IMPORTED_MODULE_0__util_render__["a" /* default */].update(data);
+        Game.updateView(data);
+        __WEBPACK_IMPORTED_MODULE_0__util_render__["a" /* default */].update(data);
 
-      data.animationFrame += 1;
+        data.animationFrame += 1;
+      }
+      
       window.requestAnimationFrame(loop);
     };
 
-    loop();
+    this.lastFrameTime = performance.now();
+    loop(this.lastFrameTime);
   }
 
   // Update viewport to follow Mario
